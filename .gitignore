@@ -1,0 +1,25 @@
+.codex_skill_draft/
+
+# Vivado generated files
+**/.Xil/
+**/*.cache/
+**/*.hw/
+**/*.ip_user_files/
+**/*.runs/
+**/*.sim/
+**/xsim.dir/
+**/*.jou
+**/*.log
+**/*.str
+**/*.pb
+**/*.wdb
+**/*.vcd
+**/webtalk*
+**/.srcs/
+
+# Crash dumps
+hs_err_pid*
+
+# OS/editor noise
+Thumbs.db
+Desktop.ini
