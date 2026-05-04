@@ -19,24 +19,6 @@ module pparser_hw_static (
     localparam ACTION_DESC_COUNT = 26;
     localparam ACTION_DESC_W = 9;
 
-    localparam [16*11-1:0] STAGE0_DESC_FLAT = {
-        8'd12, 3'd0, 8'd12, 3'd1, 8'd12, 3'd2, 8'd12, 3'd3,
-        8'd12, 3'd4, 8'd12, 3'd5, 8'd12, 3'd6, 8'd12, 3'd7,
-        8'd13, 3'd0, 8'd13, 3'd1, 8'd13, 3'd2, 8'd13, 3'd3,
-        8'd13, 3'd4, 8'd13, 3'd5, 8'd13, 3'd6, 8'd13, 3'd7
-    };
-
-    localparam [32*11-1:0] STAGE1_DESC_FLAT = {
-        8'd18, 3'd0, 8'd18, 3'd1, 8'd18, 3'd2, 8'd18, 3'd3,
-        8'd18, 3'd4, 8'd18, 3'd5, 8'd18, 3'd6, 8'd18, 3'd7,
-        8'd19, 3'd0, 8'd19, 3'd1, 8'd19, 3'd2, 8'd19, 3'd3,
-        8'd19, 3'd4, 8'd19, 3'd5, 8'd19, 3'd6, 8'd19, 3'd7,
-        8'd22, 3'd0, 8'd22, 3'd1, 8'd22, 3'd2, 8'd22, 3'd3,
-        8'd22, 3'd4, 8'd22, 3'd5, 8'd22, 3'd6, 8'd22, 3'd7,
-        8'd23, 3'd0, 8'd23, 3'd1, 8'd23, 3'd2, 8'd23, 3'd3,
-        8'd23, 3'd4, 8'd23, 3'd5, 8'd23, 3'd6, 8'd23, 3'd7
-    };
-
     reg [SLOT_W-1:0] header_wr_ptr;
     reg [SLOT_W-1:0] header_rd_ptr;
     reg [5:0]        header_count;
@@ -49,13 +31,19 @@ module pparser_hw_static (
     reg [SLOT_W-1:0] s1_slot;
     reg [15:0]       s1_stage0_key;
 
+    reg              s1d_valid;
+    reg [SLOT_W-1:0] s1d_slot;
+
     reg              s2_valid;
     reg [SLOT_W-1:0] s2_slot;
+    reg              s2_stage0_hit;
+    reg [1:0]        s2_stage0_addr;
 
     reg              s3_valid;
     reg [SLOT_W-1:0] s3_slot;
     reg              s3_stage0_hit;
     reg [1:0]        s3_stage0_addr;
+    reg [31:0]       s3_stage1_key;
 
     reg              s4_valid;
     reg [SLOT_W-1:0] s4_slot;
@@ -67,6 +55,16 @@ module pparser_hw_static (
     reg [SLOT_W-1:0] s5_slot;
     reg              s5_stage0_hit;
     reg [1:0]        s5_stage0_addr;
+
+    reg              s5d_valid;
+    reg [SLOT_W-1:0] s5d_slot;
+    reg              s5d_stage0_hit;
+    reg [1:0]        s5d_stage0_addr;
+
+    reg              s5dd_valid;
+    reg [SLOT_W-1:0] s5dd_slot;
+    reg              s5dd_stage0_hit;
+    reg [1:0]        s5dd_stage0_addr;
 
     reg              s6_valid;
     reg [SLOT_W-1:0] s6_slot;
@@ -109,20 +107,52 @@ module pparser_hw_static (
     wire [511:0]                            s7_phv_comb;
     wire [15:0]                             stage0_key_from_input;
     wire [31:0]                             stage1_key_from_bram;
+    wire [16*11-1:0]                        stage0_descs_flat;
+    wire [32*11-1:0]                        stage1_descs_flat;
     wire [TENANT_W-1:0]                     tenant_id_comb;
     wire                                    tables_ready;
+    wire                                    stage0_desc_ready;
+    wire                                    stage1_desc_ready;
     wire [2047:0]                           stage1_header_rd_data;
     wire [2047:0]                           phv_header_rd_data;
 
     assign tenant_id_comb = {TENANT_W{1'b0}};
-    assign tables_ready = stage0_table_ready & stage1_table_ready;
+    assign tables_ready = stage0_table_ready & stage1_table_ready & stage0_desc_ready & stage1_desc_ready;
+
+    pparser_rule_bram #(
+        .DATA_W(16 * 11),
+        .ADDR_W(1),
+        .DEPTH(2),
+        .INIT_FILE("pparser_stage0_desc.mem")
+    ) u_stage0_desc_bram (
+        .clk(clk),
+        .rst(rst),
+        .en(1'b1),
+        .addr(1'b0),
+        .data(stage0_descs_flat),
+        .ready(stage0_desc_ready)
+    );
+
+    pparser_rule_bram #(
+        .DATA_W(32 * 11),
+        .ADDR_W(1),
+        .DEPTH(2),
+        .INIT_FILE("pparser_stage1_desc.mem")
+    ) u_stage1_desc_bram (
+        .clk(clk),
+        .rst(rst),
+        .en(1'b1),
+        .addr(1'b0),
+        .data(stage1_descs_flat),
+        .ready(stage1_desc_ready)
+    );
 
     pparser_key_extractor #(
         .HEADER_W(2048),
         .OUTPUT_W(16)
     ) u_stage0_key_extractor (
         .header(in_header),
-        .descs_flat(STAGE0_DESC_FLAT),
+        .descs_flat(stage0_descs_flat),
         .key_bits(stage0_key_from_input)
     );
 
@@ -159,7 +189,7 @@ module pparser_hw_static (
         .OUTPUT_W(32)
     ) u_stage1_key_extractor (
         .header(stage1_header_rd_data),
-        .descs_flat(STAGE1_DESC_FLAT),
+        .descs_flat(stage1_descs_flat),
         .key_bits(stage1_key_from_bram)
     );
 
@@ -196,8 +226,10 @@ module pparser_hw_static (
         .DESC_W(ACTION_DESC_W),
         .TENANT_W(TENANT_W)
     ) u_action_table (
+        .clk(clk),
+        .rst(rst),
         .tenant_id(tenant_id_comb),
-        .path_id(s7_path_id),
+        .path_id(resolved_path_comb),
         .action_descs(action_descs_comb)
     );
 
@@ -236,10 +268,13 @@ module pparser_hw_static (
 
             s0_valid <= 1'b0;
             s1_valid <= 1'b0;
+            s1d_valid <= 1'b0;
             s2_valid <= 1'b0;
             s3_valid <= 1'b0;
             s4_valid <= 1'b0;
             s5_valid <= 1'b0;
+            s5d_valid <= 1'b0;
+            s5dd_valid <= 1'b0;
             s6_valid <= 1'b0;
             s7_valid <= 1'b0;
             s8_valid <= 1'b0;
@@ -266,13 +301,27 @@ module pparser_hw_static (
             end
 
             if (s6_ready) begin
-                s6_valid <= s5_valid;
-                if (s5_valid) begin
-                    s6_slot <= s5_slot;
-                    s6_stage0_hit <= s5_stage0_hit;
-                    s6_stage0_addr <= s5_stage0_addr;
+                s6_valid <= s5dd_valid;
+                if (s5dd_valid) begin
+                    s6_slot <= s5dd_slot;
+                    s6_stage0_hit <= s5dd_stage0_hit;
+                    s6_stage0_addr <= s5dd_stage0_addr;
                     s6_stage1_hit <= stage1_hit_comb;
                     s6_stage1_addr <= stage1_addr_comb;
+                end
+
+                s5dd_valid <= s5d_valid;
+                if (s5d_valid) begin
+                    s5dd_slot <= s5d_slot;
+                    s5dd_stage0_hit <= s5d_stage0_hit;
+                    s5dd_stage0_addr <= s5d_stage0_addr;
+                end
+
+                s5d_valid <= s5_valid;
+                if (s5_valid) begin
+                    s5d_slot <= s5_slot;
+                    s5d_stage0_hit <= s5_stage0_hit;
+                    s5d_stage0_addr <= s5_stage0_addr;
                 end
             end
 
@@ -291,7 +340,7 @@ module pparser_hw_static (
                     s4_slot <= s3_slot;
                     s4_stage0_hit <= s3_stage0_hit;
                     s4_stage0_addr <= s3_stage0_addr;
-                    s4_stage1_key <= stage1_key_from_bram;
+                    s4_stage1_key <= s3_stage1_key;
                 end
             end
 
@@ -299,15 +348,23 @@ module pparser_hw_static (
                 s3_valid <= s2_valid;
                 if (s2_valid) begin
                     s3_slot <= s2_slot;
-                    s3_stage0_hit <= stage0_hit_comb;
-                    s3_stage0_addr <= stage0_addr_comb;
+                    s3_stage0_hit <= s2_stage0_hit;
+                    s3_stage0_addr <= s2_stage0_addr;
+                    s3_stage1_key <= stage1_key_from_bram;
                 end
             end
 
             if (s2_ready) begin
-                s2_valid <= s1_valid;
+                s2_valid <= s1d_valid;
+                if (s1d_valid) begin
+                    s2_slot <= s1d_slot;
+                    s2_stage0_hit <= stage0_hit_comb;
+                    s2_stage0_addr <= stage0_addr_comb;
+                end
+
+                s1d_valid <= s1_valid;
                 if (s1_valid) begin
-                    s2_slot <= s1_slot;
+                    s1d_slot <= s1_slot;
                 end
             end
 

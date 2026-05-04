@@ -1,11 +1,11 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2024.2.2 (win64) Build 6060944 Thu Mar 06 19:10:01 MST 2025
-| Date         : Sat May  2 11:48:01 2026
+| Date         : Mon May  4 20:19:09 2026
 | Host         : DESKTOP-SPFRT2B running 64-bit major release  (build 9200)
 | Command      : report_high_fanout_nets -fanout_greater_than 16 -file C:/Users/DELL/Desktop/Traffic-Light-Controller-using-Verilog-master/pparser_vivado_src/reports/pparser_high_fanout_synth_generic_7series.rpt
 | Design       : pparser_hw_static
-| Device       : xc7a35t
+| Device       : xc7a200t
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 High Fan-out Nets Information
@@ -13,19 +13,19 @@ High Fan-out Nets Information
 1. Summary
 ----------
 
-+------------------------------------------------------------------------+--------+-------------+
-| Net Name                                                               | Fanout | Driver Type |
-+------------------------------------------------------------------------+--------+-------------+
-| clk_i_BUFG                                                             |    955 | BUFG        |
-| rst_IBUF                                                               |    275 | IBUF        |
-| s8_path_id                                                             |    216 | LUT3        |
-| u_stage0_tcam/u_stage0_cam_core/s8_valid_reg                           |    198 | LUT4        |
-| s7_path_id[2]                                                          |    139 | FDSE        |
-| s7_path_id_reg[3]_rep__0_n_0                                           |    139 | FDSE        |
-| s7_path_id[1]                                                          |    139 | FDSE        |
-| u_stage1_tcam/u_stage1_cam_core/stage1_cam_i/rtl_cam/clog/int_reg_en_i |    130 | FDRE        |
-| s7_path_id_reg[3]_rep_n_0                                              |    128 | FDSE        |
-| s7_path_id_reg[3]_rep__5_n_0                                           |    106 | FDSE        |
-+------------------------------------------------------------------------+--------+-------------+
++--------------------------------------------------------------------------+--------+-------------+
+| Net Name                                                                 | Fanout | Driver Type |
++--------------------------------------------------------------------------+--------+-------------+
+| clk_i_BUFG                                                               |   1096 | BUFG        |
+| u_action_table/u_action_bram/u_rule_bram/xpm_memory_base_inst/douta[0]   |   1032 | RAMB36E1    |
+| u_action_table/u_action_bram/u_rule_bram/xpm_memory_base_inst/douta[108] |   1032 | RAMB36E1    |
+| u_action_table/u_action_bram/u_rule_bram/xpm_memory_base_inst/douta[117] |   1032 | RAMB36E1    |
+| u_action_table/u_action_bram/u_rule_bram/xpm_memory_base_inst/douta[126] |   1032 | RAMB36E1    |
+| u_action_table/u_action_bram/u_rule_bram/xpm_memory_base_inst/douta[135] |   1032 | RAMB36E1    |
+| u_action_table/u_action_bram/u_rule_bram/xpm_memory_base_inst/douta[144] |   1032 | RAMB36E1    |
+| u_action_table/u_action_bram/u_rule_bram/xpm_memory_base_inst/douta[153] |   1032 | RAMB36E1    |
+| u_action_table/u_action_bram/u_rule_bram/xpm_memory_base_inst/douta[180] |   1032 | RAMB36E1    |
+| u_action_table/u_action_bram/u_rule_bram/xpm_memory_base_inst/douta[189] |   1032 | RAMB36E1    |
++--------------------------------------------------------------------------+--------+-------------+
 
 
