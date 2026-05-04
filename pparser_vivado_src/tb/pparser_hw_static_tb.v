@@ -335,8 +335,8 @@ module pparser_hw_static_tb;
                 $fatal(1);
             end
 
-            if ((packet_total > 16) && out_ready && (latency != 9)) begin
-                $display("ERROR: nominal latency mismatch at packet %0d expected=9 got=%0d", recv_count, latency);
+            if ((packet_total > 16) && out_ready && (latency != 12)) begin
+                $display("ERROR: nominal latency mismatch at packet %0d expected=12 got=%0d", recv_count, latency);
                 $fatal(1);
             end
 

@@ -3,6 +3,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 library cam;
+use cam.cam_init_file_pack_xst.ALL;
 
 entity pparser_stage0_cam_core is
   port (
@@ -17,6 +18,22 @@ end pparser_stage0_cam_core;
 
 architecture rtl of pparser_stage0_cam_core is
   type state_t is (INIT_PULSE, INIT_WAIT_BUSY_HI, INIT_WAIT_BUSY_LO, RUN);
+  type cam_word_array_t is array (0 to 15) of STD_LOGIC_VECTOR(16 downto 0);
+
+  impure function init_cam_words(filename : in string) return cam_word_array_t is
+    variable flat_mem : STD_LOGIC_VECTOR((16 * 17) - 1 downto 0) := (others => '0');
+    variable line_count : integer := 16;
+    variable words : cam_word_array_t := (others => (others => '0'));
+  begin
+    read_meminit_file(filename, 16, 17, flat_mem, line_count);
+    for i in 0 to 15 loop
+      words(i) := flat_mem(((i + 1) * 17) - 1 downto (i * 17));
+    end loop;
+    return words;
+  end function;
+
+  constant CAM_DATA_INIT : cam_word_array_t := init_cam_words("pparser_stage0_cam_data.mif");
+  constant CAM_MASK_INIT : cam_word_array_t := init_cam_words("pparser_stage0_cam_mask.mif");
 
   signal state_r          : state_t := INIT_PULSE;
   signal init_index_r     : unsigned(3 downto 0) := (others => '0');
@@ -30,15 +47,8 @@ architecture rtl of pparser_stage0_cam_core is
   signal ready_r          : STD_LOGIC := '0';
 begin
   wr_addr_w <= STD_LOGIC_VECTOR(init_index_r);
-
-  with to_integer(init_index_r) select din_w <=
-    "10000100000000000" when 0,
-    "11000011011011101" when 1,
-    "11000100010001111" when 2,
-    "11000100010010000" when 3,
-    (others => '0')     when others;
-
-  data_mask_w <= (others => '0');
+  din_w <= CAM_DATA_INIT(to_integer(init_index_r));
+  data_mask_w <= CAM_MASK_INIT(to_integer(init_index_r));
 
   stage0_cam_i : entity cam.cam_top
     generic map (

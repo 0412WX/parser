@@ -1,11 +1,12 @@
 set project_dir "C:/Users/DELL/Desktop/Traffic-Light-Controller-using-Verilog-master/pparser_vivado_src"
 set report_dir [file join $project_dir reports]
-set target_part "xc7a35tcpg236-1"
+set target_part "xc7a200tfbg676-2"
 
 file mkdir $report_dir
-cd $project_dir
+cd [file join $project_dir rtl]
 
 set cam_dir [file join $project_dir third_party xilinx_cam]
+set header_bram_ip_dir [file join $project_dir ip pparser_header_bram_ip_10]
 
 read_vhdl -library cam [file join $cam_dir cam_init_file_pack_xst.vhd]
 read_vhdl -library cam [file join $cam_dir cam_pkg.vhd]
@@ -36,8 +37,12 @@ read_vhdl [list \
     [file join $project_dir rtl pparser_stage1_cam_core.vhd] \
 ]
 
+read_vhdl -library blk_mem_gen_v8_4_10 [file join $header_bram_ip_dir hdl blk_mem_gen_v8_4_vhsyn_rfs.vhd]
+read_vhdl [file join $header_bram_ip_dir synth pparser_header_bram_ip.vhd]
+
 read_verilog [list \
     [file join $project_dir rtl pparser_header_bram.v] \
+    [file join $project_dir rtl pparser_rule_bram.v] \
     [file join $project_dir rtl pparser_key_extractor.v] \
     [file join $project_dir rtl pparser_action_table.v] \
     [file join $project_dir rtl pparser_stage0_tcam.v] \

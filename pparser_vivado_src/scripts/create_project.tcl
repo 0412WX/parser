@@ -2,8 +2,9 @@ set origin_dir [file normalize [file dirname [info script]]]
 set project_dir [file normalize [file join $origin_dir ..]]
 set proj_name "pparser"
 set cam_dir [file join $project_dir third_party xilinx_cam]
+set target_part "xc7a200tfbg676-2"
 
-create_project $proj_name $project_dir -part xc7a35tcpg236-1 -force
+create_project $proj_name $project_dir -part $target_part -force
 
 set_property target_language Verilog [current_project]
 set_property simulator_language Mixed [current_project]
@@ -38,9 +39,8 @@ add_files -fileset sources_1 $cam_files
 set_property library cam [get_files $cam_files]
 
 add_files -fileset sources_1 [list \
-    [file join $project_dir rtl pparser_stage0_cam_core.vhd] \
-    [file join $project_dir rtl pparser_stage1_cam_core.vhd] \
     [file join $project_dir rtl pparser_header_bram.v] \
+    [file join $project_dir rtl pparser_rule_bram.v] \
     [file join $project_dir rtl pparser_key_extractor.v] \
     [file join $project_dir rtl pparser_action_table.v] \
     [file join $project_dir rtl pparser_stage0_tcam.v] \
@@ -48,6 +48,18 @@ add_files -fileset sources_1 [list \
     [file join $project_dir rtl pparser_final_resolver.v] \
     [file join $project_dir rtl pparser_phv_builder.v] \
     [file join $project_dir rtl pparser_hw_static.v] \
+    [file join $project_dir rtl pparser_stage0_cam_data.mif] \
+    [file join $project_dir rtl pparser_stage0_cam_mask.mif] \
+    [file join $project_dir rtl pparser_stage1_cam_data.mif] \
+    [file join $project_dir rtl pparser_stage1_cam_mask.mif] \
+    [file join $project_dir rtl pparser_stage0_desc.mem] \
+    [file join $project_dir rtl pparser_stage1_desc.mem] \
+    [file join $project_dir rtl pparser_action_table.mem] \
+]
+
+add_files -fileset sources_1 [list \
+    [file join $project_dir rtl pparser_stage0_cam_core.vhd] \
+    [file join $project_dir rtl pparser_stage1_cam_core.vhd] \
 ]
 
 add_files -fileset constrs_1 [list \
@@ -60,6 +72,8 @@ add_files -fileset sim_1 [list \
     [file join $project_dir tb pparser_longpath_gap_tb.v] \
     [file join $project_dir tb pparser_cam_smoke_tb.v] \
     [file join $project_dir tb pparser_single_short_tb.v] \
+    [file join $project_dir tb pparser_single_long_tb.v] \
+    [file join $project_dir tb pparser_multi_short_tb.v] \
     [file join $project_dir tb pparser_debug_tb.v] \
 ]
 
